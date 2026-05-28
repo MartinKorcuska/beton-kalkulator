@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#1a1a2e">
+  <meta name="description" content="Kalkulačka betónu pre murári a stavbárov. Vypočítajte objem, vrecia a cenu rýchlo a presne.">
+  <title>BetónPro — Kalkulačka</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <!-- AdMob SDK — nahraď svojim App ID -->
+  <!-- <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script> -->
+
+  <style>
+    :root {
+      --bg:       #0f0f1a;
+      --surface:  #1a1a2e;
+      --card:     #22223b;
+      --accent:   #f4a261;
+      --accent2:  #e76f51;
+      --text:     #f1f0ea;
+      --muted:    #8888aa;
+      --border:   rgba(255,255,255,0.08);
+      --success:  #52b788;
+      --radius:   16px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Barlow', sans-serif;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    /* ── ADMOB BANNER placeholder (top) ── */
+    .admob-banner {
+      width: 100%;
+      height: 50px;
+      background: #111122;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.05em;
+      flex-shrink: 0;
+    }
+    /* Skutočný AdMob kód:
+    .admob-banner ins.adsbygoogle { display: block; width: 320px; height: 50px; }
+    */
+
+    /* ── HEADER ── */
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+    .logo-icon {
+      width: 38px; height: 38px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+    }
+    .logo-text {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 800;
+      font-size: 22px;
+      letter-spacing: 0.02em;
+    }
+    .logo-sub {
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    /* ── TABS ── */
+    .tabs {
+      display: flex;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 16px;
+      gap: 4px;
+      flex-shrink: 0;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .tabs::-webkit-scrollbar { display: none; }
+    .tab {
+      padding: 10px 14px;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 600;
+      font-size: 13px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+      border: none;
+      background: none;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      white-space: nowrap;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+
+    /* ── MAIN ── */
+    main {
+      flex: 1;
+      padding: 16px;
+      max-width: 480px;
+      width: 100%;
+      margin: 0 auto;
+      overflow-y: auto;
+    }
+
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    /* ── CARDS ── */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      margin-bottom: 14px;
+    }
+    .card-title {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700;
+      font-size: 12px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+
+    /* ── INPUTS ── */
+    .field { margin-bottom: 14px; }
+    .field:last-child { margin-bottom: 0; }
+    .field label {
+      display: block;
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+    .field-row {
+      display: flex;
+      gap: 10px;
+    }
+    .field-row .field { flex: 1; margin-bottom: 0; }
+    input[type="number"], select {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-family: 'Barlow', sans-serif;
+      font-size: 18px;
+      font-weight: 600;
+      padding: 12px 14px;
+      outline: none;
+      -webkit-appearance: none;
+      transition: border-color 0.2s;
+    }
+    input[type="number"]:focus, select:focus {
+      border-color: var(--accent);
+    }
+    input[type="number"]::placeholder { color: var(--muted); font-weight: 400; font-size: 15px; }
+    .unit {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 5px;
+    }
+    select option { background: var(--card); }
+
+    /* ── BUTTON ── */
+    .btn-calc {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border: none;
+      border-radius: 12px;
+      color: #fff;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 800;
+      font-size: 18px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      margin-bottom: 14px;
+      transition: opacity 0.15s, transform 0.1s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-calc:active { opacity: 0.85; transform: scale(0.98); }
+
+    /* ── VÝSLEDOK ── */
+    .result-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .result-item {
+      background: var(--bg);
+      border-radius: 12px;
+      padding: 14px;
+      border: 1px solid var(--border);
+    }
+    .result-item.highlight {
+      background: linear-gradient(135deg, rgba(244,162,97,0.15), rgba(231,111,81,0.1));
+      border-color: rgba(244,162,97,0.3);
+      grid-column: 1 / -1;
+    }
+    .result-label {
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 6px;
+    }
+    .result-value {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700;
+      font-size: 28px;
+      color: var(--text);
+      line-height: 1;
+    }
+    .result-value.big { font-size: 38px; color: var(--accent); }
+    .result-unit {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 3px;
+    }
+
+    /* ── VÝSLEDOK — skrytý pred výpočtom ── */
+    .result-section { display: none; }
+    .result-section.visible { display: block; }
+
+    /* ── INFO TIP ── */
+    .tip {
+      background: rgba(82,183,136,0.1);
+      border: 1px solid rgba(82,183,136,0.2);
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 13px;
+      color: var(--success);
+      margin-bottom: 14px;
+      line-height: 1.5;
+    }
+
+    /* ── ADMOB interstitial placeholder ── */
+    .admob-interstitial-placeholder {
+      background: var(--surface);
+      border: 1px dashed rgba(244,162,97,0.3);
+      border-radius: var(--radius);
+      padding: 18px;
+      text-align: center;
+      margin-bottom: 14px;
+      display: none;
+    }
+    .admob-interstitial-placeholder p { font-size: 12px; color: var(--muted); }
+    .admob-interstitial-placeholder .ad-label { font-size: 10px; color: rgba(255,255,255,0.2); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px; }
+
+    /* ── FORMULÁRE tab (zmes betónu) ── */
+    .mix-option {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      margin-bottom: 10px;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+    .mix-option.selected {
+      border-color: var(--accent);
+      background: rgba(244,162,97,0.07);
+    }
+    .mix-ratio {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700;
+      font-size: 20px;
+      color: var(--accent);
+      min-width: 60px;
+    }
+    .mix-info { flex: 1; }
+    .mix-name { font-weight: 600; font-size: 14px; margin-bottom: 2px; }
+    .mix-use { font-size: 12px; color: var(--muted); }
+    .mix-check {
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px;
+      transition: all 0.2s;
+    }
+    .mix-option.selected .mix-check {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    /* ── HISTÓRIA ── */
+    .history-item {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .history-meta { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+    .history-val {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700;
+      font-size: 20px;
+    }
+    .history-empty {
+      text-align: center;
+      color: var(--muted);
+      font-size: 14px;
+      padding: 40px 0;
+    }
+
+    /* ── BOTTOM BANNER AD ── */
+    .admob-bottom {
+      width: 100%;
+      height: 50px;
+      background: #111122;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.05em;
+      flex-shrink: 0;
+    }
+
+    /* animácia výsledku */
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .result-section.visible { animation: slideUp 0.3s ease; }
+  </style>
+</head>
+<body>
+
+<!-- ══ ADMOB BANNER TOP ══ -->
+<div class="admob-banner">
+  <!-- Skutočný kód:
+  <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-XXXXXXXX" data-ad-slot="XXXXXXXXXX" data-ad-format="banner"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+  -->
+  REKLAMA · 320×50
+</div>
+
+<!-- ══ HEADER ══ -->
+<header>
+  <div class="logo-icon">🧱</div>
+  <div>
+    <div class="logo-text">BetónPro</div>
+    <div class="logo-sub">Kalkulačka pre stavbárov</div>
+  </div>
+</header>
+
+<!-- ══ TABS ══ -->
+<nav class="tabs">
+  <button class="tab active" onclick="switchTab('kalkulator', this)">Kalkulačka</button>
+  <button class="tab" onclick="switchTab('zmes', this)">Zmes betónu</button>
+  <button class="tab" onclick="switchTab('historia', this)">História</button>
+</nav>
+
+<!-- ══ MAIN ══ -->
+<main>
+
+  <!-- ── TAB: KALKULAČKA ── -->
+  <div id="screen-kalkulator" class="screen active">
+
+    <div class="card">
+      <div class="card-title">Rozmery konštrukcie</div>
+      <div class="field-row">
+        <div class="field">
+          <label>Dĺžka</label>
+          <input type="number" id="dlzka" placeholder="0.0" step="0.01" inputmode="decimal">
+          <div class="unit">metre</div>
+        </div>
+        <div class="field">
+          <label>Šírka</label>
+          <input type="number" id="sirka" placeholder="0.0" step="0.01" inputmode="decimal">
+          <div class="unit">metre</div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Hrúbka / hĺbka</label>
+        <input type="number" id="hrubka" placeholder="0.0" step="0.01" inputmode="decimal">
+        <div class="unit">metre (napr. 0.15 = 15 cm)</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Parametre betónu</div>
+      <div class="field">
+        <label>Typ zmesi</label>
+        <select id="typ-zmesi">
+          <option value="C16">C16/20 — základy, chodníky</option>
+          <option value="C20" selected>C20/25 — podlahy, základy</option>
+          <option value="C25">C25/30 — stropy, nosné prvky</option>
+          <option value="C30">C30/37 — mosty, priemysel</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Cena cementu za vrece (50 kg)</label>
+        <input type="number" id="cena-vrece" placeholder="8.50" step="0.10" inputmode="decimal" value="8.50">
+        <div class="unit">€ / vrece 50 kg</div>
+      </div>
+      <div class="field">
+        <label>Prídavok na straty (%)</label>
+        <select id="strata">
+          <option value="5">5% — presné bednenie</option>
+          <option value="10" selected>10% — štandardné</option>
+          <option value="15">15% — terén / nepravidelné</option>
+        </select>
+      </div>
+    </div>
+
+    <button class="btn-calc" onclick="vypocitaj()">⚡ VYPOČÍTAŤ</button>
+
+    <!-- Výsledky -->
+    <div id="result-section" class="result-section">
+      <div class="card">
+        <div class="card-title">Výsledok výpočtu</div>
+        <div class="result-grid">
+          <div class="result-item highlight">
+            <div class="result-label">Objem betónu (so stratami)</div>
+            <div class="result-value big" id="res-objem">—</div>
+            <div class="result-unit">m³</div>
+          </div>
+          <div class="result-item">
+            <div class="result-label">Vrecia cementu</div>
+            <div class="result-value" id="res-vrecia">—</div>
+            <div class="result-unit">× 50 kg</div>
+          </div>
+          <div class="result-item">
+            <div class="result-label">Cement celkom</div>
+            <div class="result-value" id="res-cement">—</div>
+            <div class="result-unit">kg</div>
+          </div>
+          <div class="result-item">
+            <div class="result-label">Piesok / štrk</div>
+            <div class="result-value" id="res-piesok">—</div>
+            <div class="result-unit">kg</div>
+          </div>
+          <div class="result-item">
+            <div class="result-label">Voda</div>
+            <div class="result-value" id="res-voda">—</div>
+            <div class="result-unit">litrov</div>
+          </div>
+          <div class="result-item">
+            <div class="result-label">Odhadovaná cena</div>
+            <div class="result-value" id="res-cena">—</div>
+            <div class="result-unit">€ (iba cement)</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="tip-section" class="tip"></div>
+    </div>
+
+  </div>
+
+  <!-- ── TAB: ZMES ── -->
+  <div id="screen-zmes" class="screen">
+    <div class="card">
+      <div class="card-title">Štandardné receptúry betónu</div>
+      <p style="font-size:13px; color:var(--muted); margin-bottom:14px; line-height:1.6;">
+        Pomer cement : piesok : štrk : voda. Na 1 m³ betónu.
+      </p>
+
+      <div class="mix-option selected" onclick="selectMix(this, 'C16')">
+        <div class="mix-ratio">1:3:5</div>
+        <div class="mix-info">
+          <div class="mix-name">C16/20 — Ľahký betón</div>
+          <div class="mix-use">Chodníky, nekritické základy, výplne</div>
+        </div>
+        <div class="mix-check">✓</div>
+      </div>
+      <div class="mix-option" onclick="selectMix(this, 'C20')">
+        <div class="mix-ratio">1:2:4</div>
+        <div class="mix-info">
+          <div class="mix-name">C20/25 — Štandardný</div>
+          <div class="mix-use">Základy, podlahy, vnútorné konštrukcie</div>
+        </div>
+        <div class="mix-check"></div>
+      </div>
+      <div class="mix-option" onclick="selectMix(this, 'C25')">
+        <div class="mix-ratio">1:1.5:3</div>
+        <div class="mix-info">
+          <div class="mix-name">C25/30 — Pevný betón</div>
+          <div class="mix-use">Stropy, schodiská, nosné prvky</div>
+        </div>
+        <div class="mix-check"></div>
+      </div>
+      <div class="mix-option" onclick="selectMix(this, 'C30')">
+        <div class="mix-ratio">1:1:2</div>
+        <div class="mix-info">
+          <div class="mix-name">C30/37 — Vysokopevnostný</div>
+          <div class="mix-use">Priemyselné podlahy, mosty, piliere</div>
+        </div>
+        <div class="mix-check"></div>
+      </div>
+    </div>
+
+    <!-- Admob native/interstitial placeholder -->
+    <div style="background:var(--card); border:1px dashed rgba(244,162,97,0.2); border-radius:var(--radius); padding:18px; text-align:center; margin-bottom:14px;">
+      <div style="font-size:10px; color:rgba(255,255,255,0.15); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:6px;">Reklama</div>
+      <div style="font-size:12px; color:var(--muted);">AdMob Native Ad · 300×250</div>
+      <!-- Skutočný kód:
+      <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-XXXXXXXX" data-ad-slot="XXXXXXXXXX" data-ad-format="rectangle"></ins>
+      -->
+    </div>
+
+    <div class="card">
+      <div class="card-title">Tip: w/c pomer (voda/cement)</div>
+      <p style="font-size:13px; color:var(--muted); line-height:1.7;">
+        Čím <strong style="color:var(--text)">nižší w/c pomer</strong>, tým pevnejší betón. Štandardne 0.45–0.55. Nikdy nepridávaj viac vody ako v receptúre — znižuje pevnosť!
+      </p>
+    </div>
+  </div>
+
+  <!-- ── TAB: HISTÓRIA ── -->
+  <div id="screen-historia" class="screen">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+      <span style="font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:16px; letter-spacing:0.05em; text-transform:uppercase;">Posledné výpočty</span>
+      <button onclick="vymazHistoriu()" style="background:none; border:none; color:var(--muted); font-size:12px; cursor:pointer; font-family:'Barlow',sans-serif;">Vymazať</button>
+    </div>
+    <div id="historia-list">
+      <div class="history-empty">Zatiaľ žiadne výpočty.<br>Vyplň kalkulačku a stlač Vypočítať.</div>
+    </div>
+  </div>
+
+</main>
+
+<!-- ══ ADMOB BANNER BOTTOM ══ -->
+<div class="admob-bottom">
+  <!-- Skutočný kód:
+  <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-XXXXXXXX" data-ad-slot="XXXXXXXXXX" data-ad-format="banner"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+  -->
+  REKLAMA · 320×50
+</div>
+
+<script>
+// ── Receptúry (cement:piesok:sttrk, wc pomer, hustota ~2400 kg/m³)
+const MIX = {
+  C16: { cement: 230, piesok: 690, strk: 1150, voda: 0.55 },
+  C20: { cement: 300, piesok: 600, strk: 1200, voda: 0.50 },
+  C25: { cement: 360, piesok: 540, strk: 1080, voda: 0.46 },
+  C30: { cement: 420, piesok: 420, strk:  840, voda: 0.42 },
+};
+
+let historia = JSON.parse(localStorage.getItem('beton_historia') || '[]');
+
+function switchTab(id, btn) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('active');
+  btn.classList.add('active');
+}
+
+function vypocitaj() {
+  const d = parseFloat(document.getElementById('dlzka').value);
+  const s = parseFloat(document.getElementById('sirka').value);
+  const h = parseFloat(document.getElementById('hrubka').value);
+  const typ = document.getElementById('typ-zmesi').value;
+  const cenaVrece = parseFloat(document.getElementById('cena-vrece').value) || 8.5;
+  const strata = parseFloat(document.getElementById('strata').value) / 100;
+
+  if (!d || !s || !h) {
+    alert('Vyplň prosím všetky rozmery.');
+    return;
+  }
+
+  const zakladObjem = d * s * h;
+  const objem = zakladObjem * (1 + strata);
+  const mix = MIX[typ];
+
+  const cementKg = Math.ceil(mix.cement * objem);
+  const piesokKg = Math.ceil(mix.piesok * objem);
+  const vodaL   = Math.ceil(mix.voda * cementKg);
+  const vrecia  = Math.ceil(cementKg / 50);
+  const cena    = (vrecia * cenaVrece).toFixed(2);
+
+  document.getElementById('res-objem').textContent  = objem.toFixed(2);
+  document.getElementById('res-vrecia').textContent = vrecia;
+  document.getElementById('res-cement').textContent = cementKg;
+  document.getElementById('res-piesok').textContent = piesokKg;
+  document.getElementById('res-voda').textContent   = vodaL;
+  document.getElementById('res-cena').textContent   = cena + ' €';
+
+  const tips = {
+    C16: '💡 C16/20 je vhodný pre chodníky a menej zaťažené plochy. Neskladuj dlhšie ako 3 mesiace.',
+    C20: '💡 C20/25 je najpoužívanejší betón pre rodinné domy. Betónuj pri teplote 5–30°C.',
+    C25: '💡 C25/30 vyžaduje kvalitné bednenie. Ošetruj vlhčením 7 dní po betonáži.',
+    C30: '💡 C30/37 — zvážte objednávku hotovej zmesi z betonárne pre veľkoobjemové práce.',
+  };
+  document.getElementById('tip-section').textContent = tips[typ];
+
+  document.getElementById('result-section').classList.add('visible');
+
+  // Ulož do histórie
+  const zaznam = {
+    datum: new Date().toLocaleDateString('sk-SK'),
+    rozmery: `${d}×${s}×${h} m`,
+    objem: objem.toFixed(2),
+    vrecia,
+    typ,
+  };
+  historia.unshift(zaznam);
+  if (historia.length > 20) historia.pop();
+  localStorage.setItem('beton_historia', JSON.stringify(historia));
+  renderHistoria();
+}
+
+function selectMix(el, typ) {
+  document.querySelectorAll('.mix-option').forEach(o => {
+    o.classList.remove('selected');
+    o.querySelector('.mix-check').textContent = '';
+  });
+  el.classList.add('selected');
+  el.querySelector('.mix-check').textContent = '✓';
+  // Synchronizuj s kalkulačkou
+  document.getElementById('typ-zmesi').value = typ;
+}
+
+function renderHistoria() {
+  const list = document.getElementById('historia-list');
+  if (historia.length === 0) {
+    list.innerHTML = '<div class="history-empty">Zatiaľ žiadne výpočty.<br>Vyplň kalkulačku a stlač Vypočítať.</div>';
+    return;
+  }
+  list.innerHTML = historia.map(z => `
+    <div class="history-item">
+      <div>
+        <div class="history-meta">${z.datum} · ${z.typ} · ${z.rozmery}</div>
+        <div class="history-val">${z.objem} m³ · ${z.vrecia} vriec</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+renderHistoria();
+
+// ── PWA Service Worker registrácia
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js');
+}
+</script>
+
+</body>
+</html>
