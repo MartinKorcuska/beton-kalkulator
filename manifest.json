@@ -1,14 +1,14 @@
 {
-  "name": "BetónPro — Kalkulačka betónu",
+  "name": "Kalkulačka betónu BetónPro",
   "short_name": "BetónPro",
-  "description": "Kalkulačka betónu pre murári a stavbárov. Objem, vrecia cementu, cena — rýchlo a presne.",
-  "start_url": "/index.html",
+  "description": "Slovenská kalkulačka betónu. Výpočet betónu pre dosku, základ, pätku, stĺp, schody, vrecia betónu, tvárnice a oceľovú výstuž.",
+  "start_url": "./",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#0f0f1a",
   "theme_color": "#1a1a2e",
   "lang": "sk",
-  "scope": "/",
+  "scope": "./",
   "icons": [
     {
       "src": "icons/play_store_512.png",
@@ -34,9 +34,9 @@
   "categories": ["utilities", "productivity"],
   "shortcuts": [
     {
-      "name": "Nový výpočet",
-      "url": "/index.html",
-      "description": "Spusti kalkulačku betónu"
+      "name": "Výpočet betónu",
+      "url": "./",
+      "description": "Spusti slovenskú kalkulačku betónu"
     }
   ]
 }
